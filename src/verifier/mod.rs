@@ -5,13 +5,15 @@ pub enum GuessResult {
 }
 
 #[derive(Debug)]
-pub struct Verifier<'a> {
-    secret: &'a str,
+pub struct Verifier {
+    secret: String,
 }
 
-impl<'a> Verifier<'a> {
-    pub fn new(secret: &'a str) -> Self {
-        Verifier { secret }
+impl Verifier {
+    pub fn new(secret: &str) -> Self {
+        Verifier {
+            secret: secret.to_owned(),
+        }
     }
 
     pub fn verify(&mut self, input: &str) -> GuessResult {
