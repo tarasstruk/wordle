@@ -31,7 +31,7 @@ fn main() {
                     break;
                 }
                 GuessResult::Missed { hint } => {
-                    println!("{}\n", hint);
+                    println!("{hint}\n");
                 }
             }
         }
