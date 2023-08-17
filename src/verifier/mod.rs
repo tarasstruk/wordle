@@ -1,120 +1,85 @@
 #[derive(Debug, PartialEq, Eq)]
-pub enum GuessChar {
-    Hit(char),
-    Miss(char),
-    Move(char),
+pub enum GuessResult {
+    Guessed,
+    Missed { hint: String },
 }
 
 #[derive(Debug)]
 pub struct Verifier {
-    input: Vec<GuessChar>,
-    secret: Vec<char>,
+    secret: String,
 }
 
 impl Verifier {
     pub fn new(secret: &str) -> Self {
         Verifier {
-            input: Vec::new(),
-            secret: secret.chars().collect(),
+            secret: secret.to_owned(),
         }
     }
 
-    pub fn hint(&self) -> String {
-        let mut output = String::new();
-        for item in self.input.iter() {
-            match item {
-                GuessChar::Hit(_) => output.push('+'),
-                GuessChar::Miss(_) => output.push('-'),
-                GuessChar::Move(_) => output.push('?'),
-            }
+    pub fn verify(&mut self, input: &str) -> GuessResult {
+        if input == self.secret {
+            return GuessResult::Guessed;
         }
-        output
-    }
 
-    fn parse_input(input: &str) -> Vec<GuessChar> {
-        input.trim().chars().map(GuessChar::Miss).collect()
-    }
+        let secret_chars = self.secret.chars().collect::<Vec<_>>();
 
-    pub fn verify(&mut self, input: &str) -> bool {
-        self.input = Self::parse_input(input);
-
-        for (gidx, guess) in self.input.iter_mut().enumerate() {
-            for (sidx, secret) in self.secret.iter().enumerate() {
-                // println!("guess: {:?}, gid: {}, sid: {}", guess, &gidx, &sidx);
-                if let GuessChar::Miss(ch) = guess {
-                    if ch == secret && gidx == sidx {
-                        *guess = GuessChar::Hit(*ch)
-                    }
+        let hint: String = input
+            .chars()
+            .enumerate()
+            .map(|(index, ch)| {
+                if secret_chars.get(index) == Some(&ch) {
+                    '+'
+                } else if secret_chars.contains(&ch) {
+                    '?'
+                } else {
+                    '-'
                 }
-            }
-            for (sidx, secret) in self.secret.iter().enumerate() {
-                // println!("guess: {:?}, gid: {}, sid: {}", guess, &gidx, &sidx);
-                if let GuessChar::Miss(ch) = guess {
-                    if ch == secret && gidx != sidx {
-                        *guess = GuessChar::Move(*ch)
-                    }
-                }
-            }
-        }
-        self.input.iter().all(|item| match item {
-            GuessChar::Hit(_) => true,
-            _ => false,
-        })
+            })
+            .collect();
+        GuessResult::Missed { hint }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use GuessChar::*;
 
     #[test]
-    fn new_saves_secret() {
-        let verifier = Verifier::new("abcd");
-        assert_eq!(verifier.secret, vec!['a', 'b', 'c', 'd'])
-    }
-
-    #[test]
-    fn verify_verifies() {
+    fn verify_missed_variant_0() {
         let mut verifier = Verifier::new("baba");
-        assert!(!verifier.verify("buba"));
         assert_eq!(
-            verifier.input,
-            vec![Hit('b'), Miss('u'), Hit('b'), Hit('a')]
-        )
+            verifier.verify("buba"),
+            GuessResult::Missed {
+                hint: "+-++".to_owned()
+            }
+        );
     }
 
     #[test]
-    fn verify_variant_1() {
+    fn verify_missed_variant_1() {
         let mut verifier = Verifier::new("beco");
-        assert!(!verifier.verify("ecoo"));
         assert_eq!(
-            verifier.input,
-            vec![Move('e'), Move('c'), Move('o'), Hit('o')]
-        )
+            verifier.verify("ecoo"),
+            GuessResult::Missed {
+                hint: "???+".to_owned()
+            }
+        );
     }
 
     #[test]
-    fn verify_variant_2() {
+    fn verify_missed_variant_2() {
         let mut verifier = Verifier::new("mohn");
-        assert!(!verifier.verify("moor"));
         assert_eq!(
-            verifier.input,
-            vec![Hit('m'), Hit('o'), Move('o'), Miss('r')]
-        )
+            verifier.verify("moor"),
+            GuessResult::Missed {
+                hint: "++?-".to_owned()
+            }
+        );
     }
 
     #[test]
-    fn verify_variant_3() {
+    fn verify_guessed() {
         let mut verifier = Verifier::new("tier");
-        assert!(verifier.verify("tier"));
-        assert_eq!(verifier.input, vec![Hit('t'), Hit('i'), Hit('e'), Hit('r')])
-    }
-
-    #[test]
-    fn verify_hint() {
-        let mut verifier = Verifier::new("tier");
-        assert!(!verifier.verify("teor"));
-        assert_eq!(verifier.hint(), "+?-+")
+        assert_eq!(verifier.verify("tier"), GuessResult::Guessed);
     }
 }
