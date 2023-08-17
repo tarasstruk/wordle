@@ -4,11 +4,16 @@ use std::process;
 mod verifier;
 use verifier::{GuessResult, Verifier};
 
+mod words;
+use words::Words;
+
 fn main() {
     println!("Wordle Game");
+    let mut words = Words::new();
+
     loop {
-        let mut service = Verifier::new("vero");
-        println!("Please enter your guess word. It should be 4 characters long.");
+        let mut service = Verifier::new(&words.sample().unwrap());
+        println!("Please enter your guess word. It should be 4 characters long");
         loop {
             let mut buf = String::new();
             io::stdin().read_line(&mut buf).unwrap();
