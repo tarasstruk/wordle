@@ -1,5 +1,5 @@
 use rand::seq::IteratorRandom;
-use std::fs;
+use std::include_str;
 
 pub struct Words {
     list: Vec<String>,
@@ -7,7 +7,7 @@ pub struct Words {
 
 impl Words {
     pub fn new() -> Self {
-        let buf = fs::read_to_string("words.txt").unwrap();
+        let buf = include_str!("words.txt");
         let list: Vec<String> = buf
             .lines()
             .map(|line| line.trim())
