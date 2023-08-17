@@ -1,25 +1,24 @@
-use rand::{rngs::ThreadRng, seq::IteratorRandom};
+use rand::seq::IteratorRandom;
 use std::fs;
 
 pub struct Words {
     list: Vec<String>,
-    rng: ThreadRng,
 }
 
 impl Words {
     pub fn new() -> Self {
-        let rng = rand::thread_rng();
         let buf = fs::read_to_string("words.txt").unwrap();
         let list: Vec<String> = buf
             .lines()
             .map(|line| line.trim())
             .map(String::from)
             .collect();
-        Words { list, rng }
+        Words { list }
     }
 
-    pub fn sample(&mut self) -> Option<String> {
-        self.list.iter().choose(&mut self.rng).map(String::from)
+    pub fn sample(&mut self) -> Option<&String> {
+        let mut rng = rand::thread_rng();
+        self.list.iter().choose(&mut rng)
     }
 }
 
