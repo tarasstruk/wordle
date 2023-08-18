@@ -1,4 +1,6 @@
 use rand::seq::IteratorRandom;
+use std::env;
+use std::fs;
 use std::include_str;
 
 pub struct Words {
@@ -7,13 +9,34 @@ pub struct Words {
 
 impl Words {
     pub fn new() -> Self {
-        let buf = include_str!("words.txt");
-        let list: Vec<String> = buf
-            .lines()
+        let list = Self::read_dictionary_from_file()
+            .or_else(|| Self::get_default_dictionary())
+            .unwrap();
+        Words { list }
+    }
+
+    fn read_dictionary_from_file() -> Option<Vec<String>> {
+        // if the path to file is not provided we skip the rest
+        let path = env::args().skip(1).next()?;
+        match fs::read_to_string(path) {
+            Ok(buf) => Some(Self::parse_content(&buf)),
+            Err(err) => {
+                println!("Eror reading file: {:?}", err);
+                None
+            }
+        }
+    }
+
+    fn parse_content(buf: &str) -> Vec<String> {
+        buf.lines()
             .map(|line| line.trim())
             .map(String::from)
-            .collect();
-        Words { list }
+            .collect()
+    }
+
+    fn get_default_dictionary() -> Option<Vec<String>> {
+        let buf = include_str!("words.txt");
+        Some(Self::parse_content(buf))
     }
 
     pub fn sample(&mut self) -> Option<&String> {

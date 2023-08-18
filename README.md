@@ -10,7 +10,12 @@ A simplified Wordle game written in Rust language.
 git clone git@github.com:tarasstruk/wordle.git
 cd wordle
 cargo run
+# or
+cargo run sample.txt
 ```
+
+Instead of `sample.txt` you can provide your own dictionary file as a text-file 
+containing 4 ASCII-characters words separated by newlines.
 
 ### To run tests:
 ```sh
