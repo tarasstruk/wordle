@@ -35,6 +35,7 @@ impl Words {
     }
 
     fn get_default_dictionary() -> Option<Vec<String>> {
+        println!("Loading the default dictionary.");
         let buf = include_str!("words.txt");
         Some(Self::parse_content(buf))
     }
