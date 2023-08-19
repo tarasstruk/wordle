@@ -7,22 +7,34 @@ pub struct Words {
     list: Vec<String>,
 }
 
+enum DictionarySource {
+    DiskFile(String),
+    Default,
+}
+
+impl DictionarySource {
+    fn new() -> Self {
+        match env::args().skip(1).next() {
+            Some(path) => Self::DiskFile(path),
+            None => Self::Default,
+        }
+    }
+}
+
 impl Words {
     pub fn new() -> Self {
-        let list = Self::read_dictionary_from_file()
-            .or_else(|| Self::get_default_dictionary())
-            .unwrap();
+        let dict = Self::read_dictionary();
+        let list = Self::parse_content(&dict);
         Words { list }
     }
 
-    fn read_dictionary_from_file() -> Option<Vec<String>> {
-        // if the path to file is not provided we skip the rest
-        let path = env::args().skip(1).next()?;
-        match fs::read_to_string(path) {
-            Ok(buf) => Some(Self::parse_content(&buf)),
-            Err(err) => {
-                println!("Eror reading file: {:?}", err);
-                None
+    // it always returns a string or fails when the file cannot be read
+    fn read_dictionary() -> String {
+        match DictionarySource::new() {
+            DictionarySource::DiskFile(path) => fs::read_to_string(path).unwrap(),
+            DictionarySource::Default => {
+                println!("Loading the default dictionary.");
+                include_str!("words.txt").into()
             }
         }
     }
@@ -32,12 +44,6 @@ impl Words {
             .map(|line| line.trim())
             .map(String::from)
             .collect()
-    }
-
-    fn get_default_dictionary() -> Option<Vec<String>> {
-        println!("Loading the default dictionary.");
-        let buf = include_str!("words.txt");
-        Some(Self::parse_content(buf))
     }
 
     pub fn sample(&mut self) -> Option<&String> {
